@@ -1,0 +1,5 @@
+Issue key,Issue id,Issue Type,Summary,Description,Status,Priority,Assignee,Reporter,Labels,Components,Fix versions,Sprint,Story Points,Epic Link,Parent,Team
+ABC-1,10001,Epic,Customer onboarding,As a customer ...,In Progress,High,alice@example.com,pm@example.com,onboarding;kyc,Core,1.0.0,MP Sprint 12,,
+ABC-2,10002,Story,Implement KYC flow,As a system ...,In Review,Medium,alice@example.com,pm@example.com,journey:onboarding;step:kyc,Core,1.0.0,MP Sprint 12,5,ABC-1,Platform Team
+ABC-3,10003,Sub-task,Build KYC form,,Doing,Medium,dev@example.com,alice@example.com,,,1.0.0,,3,,ABC-2,Platform Team
+ABC-4,10004,Bug,Fix validation error,,To Do,Highest,dev@example.com,qa@example.com,bug,Core,1.0.0,MP Sprint 12,,ABC-1,Platform Team

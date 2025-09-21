@@ -1,0 +1,8 @@
+name = "product-tree-jira-proxy"
+main = "worker.js"
+compatibility_date = "2024-11-01"
+
+# Set a route in Cloudflare dash or here (edit your zone):
+# routes = [
+#   { pattern = "garethapi.com/tools/api/*", zone_name = "garethapi.com" }
+# ]

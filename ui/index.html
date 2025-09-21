@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Product Tree from Jira</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css?v=4" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+</head>
+<body>
+  <main class="container">
+    <header class="header">
+      <div class="header-content">
+        <div class="logo">
+          <h1 class="gapi-heading">Product Tree from Jira</h1>
+          <p>Exports XML using the attached format (product_tree → product/goal/job/work_item/work).</p>
+        </div>
+      </div>
+    </header>
+
+    <section class="card">
+      <div class="card-header">
+        <h2>1) BASICS</h2>
+      </div>
+      <div class="form-group">
+        <label>Product title</label>
+        <input id="productName" placeholder="e.g., MachinePay FX Platform" />
+      </div>
+      <div class="form-group">
+        <label>Default status/priority/team</label>
+        <input id="defaults" placeholder="status=active; priority=P0; team=Platform Team" />
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="card-header">
+        <h2>2) SOURCE DATA</h2>
+      </div>
+      <div class="grid2">
+        <div class="card">
+          <div class="card-header">
+            <h3>CSV IMPORT</h3>
+          </div>
+          <div id="dropZone" class="drop">Drop Jira CSV here</div>
+          <div class="form-group">
+            <input id="csvFile" type="file" accept=".csv,text/csv" />
+          </div>
+          <p class="hint">Jira → Issues → Export → CSV (all fields).</p>
+        </div>
+        <div class="card">
+          <div class="card-header">
+            <h3>JIRA VIA PROXY (OPTIONAL)</h3>
+          </div>
+          <div class="form-group">
+            <label>Proxy URL</label>
+            <input id="proxyUrl" placeholder="https://garethapi.com/tools" />
+          </div>
+          <div class="form-group">
+            <label>Proxy API Key</label>
+            <input id="proxyKey" placeholder="paste key (if required)" />
+          </div>
+          <div class="form-group">
+            <label>JQL</label>
+            <input id="jql" placeholder="project = MP ORDER BY updated DESC" />
+          </div>
+          <button id="btnFetch" class="btn btn-primary">Fetch from Jira</button>
+          <p class="hint">Proxy should expose <code>/api/jira-search</code>; Atlassian token stays server-side.</p>
+        </div>
+      </div>
+      <div id="sourceSummary" class="summary"></div>
+    </section>
+
+    <section class="card">
+      <div class="card-header">
+        <h2>3) MAPPING</h2>
+      </div>
+      <details>
+        <summary>Show mapping options</summary>
+        <div class="grid3">
+          <div class="card">
+            <div class="card-header">
+              <h4>Column headers</h4>
+            </div>
+            <div id="columns"></div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <h4>Status map</h4>
+            </div>
+            <div class="form-group">
+              <textarea id="statusMap" rows="10" placeholder="To Do = not_started&#10;In Progress = in_progress&#10;Done = done"></textarea>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <h4>Type map</h4>
+            </div>
+            <div class="form-group">
+              <textarea id="typeMap" rows="12" placeholder="Epic = goal&#10;Initiative = job&#10;Story = work_item&#10;Task = work_item&#10;Bug = work_item"></textarea>
+            </div>
+            <p class="hint">You can also map to <strong>work</strong> instead of <strong>work_item</strong> (e.g., <code>Task = work</code>).</p>
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <section class="card">
+      <div class="card-header">
+        <h2>4) GENERATE</h2>
+      </div>
+      <div class="form-group">
+        <button id="btnGenerate" class="btn btn-primary">Generate XML</button>
+        <button id="btnDownload" class="btn btn-secondary" disabled>Download XML</button>
+        <button id="btnCopy" class="btn btn-outline" disabled>Copy to clipboard</button>
+      </div>
+      <div id="counts" class="summary"></div>
+      <div class="card-header">
+        <h3>PREVIEW</h3>
+      </div>
+      <pre id="xmlPreview" class="preview"></pre>
+    </section>
+
+    <footer class="card">
+      <p class="text-center">Outputs your attached format. MIT-licensed.</p>
+    </footer>
+  </main>
+
+  <script src="app.js"></script>
+</body>
+</html>

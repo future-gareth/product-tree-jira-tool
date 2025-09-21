@@ -1,0 +1,24 @@
+{
+  "name": "product-tree-from-jira",
+  "version": "1.0.0",
+  "description": "Product Tree from Jira - Generate product trees from Jira data",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  },
+  "keywords": [
+    "jira",
+    "product-tree",
+    "api",
+    "tools"
+  ],
+  "author": "Gareth Faull",
+  "license": "MIT"
+}
