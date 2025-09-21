@@ -1,15 +1,15 @@
 # Product Tree from Jira
 
-A web application that converts Jira CSV exports into structured product tree XML files. This tool helps product managers and teams visualize their product hierarchy from Jira data.
+A web application that converts Jira data into structured product tree XML files. This tool helps product managers and teams visualize their product hierarchy from Jira data using a simple form-based interface.
 
 ## 🚀 Features
 
-- **CSV Import**: Upload Jira CSV exports directly
+- **Form-Based Interface**: Simple web form for entering Jira data
 - **Product Tree Generation**: Convert Jira data to structured XML
-- **Multiple Export Formats**: Support for various product tree formats
+- **XML Export**: Generate product tree XML files
 - **Web Interface**: Easy-to-use web interface
-- **Serverless Options**: Cloudflare Worker, Netlify, and Vercel deployments
 - **RESTful API**: Programmatic access to conversion functionality
+- **Health Monitoring**: Built-in health check endpoint
 
 ## 📋 Prerequisites
 
@@ -21,8 +21,8 @@ A web application that converts Jira CSV exports into structured product tree XM
 
 1. **Clone the repository:**
    ```bash
-   git clone https://github.com/yourusername/product-tree-from-jira.git
-   cd product-tree-from-jira
+   git clone https://github.com/future-gareth/product-tree-jira-tool.git
+   cd product-tree-jira-tool
    ```
 
 2. **Install dependencies:**
@@ -48,21 +48,28 @@ PORT=3000 npm start
 ### Web Interface
 
 1. Open your browser and navigate to `http://localhost:3002`
-2. Upload your Jira CSV export file
-3. Configure the mapping settings
-4. Generate the product tree XML
-5. Download the result
+2. Fill in the product information form:
+   - Product title
+   - Product description
+   - Goals and objectives
+   - Jobs to be done
+   - Work items
+3. Generate the product tree XML
+4. Download the result
 
 ### API Usage
 
-#### Process Product Tree
+#### Jira Search (Mock Implementation)
 ```http
-POST /api/process-product-tree
-Content-Type: multipart/form-data
+POST /api/jira-search
+Content-Type: application/json
 
-Form data:
-- file: CSV file
-- mapping: JSON configuration
+{
+  "query": "search term",
+  "jiraUrl": "https://yourcompany.atlassian.net",
+  "username": "your-email@company.com",
+  "apiToken": "your-api-token"
+}
 ```
 
 #### Health Check
@@ -70,16 +77,25 @@ Form data:
 GET /health
 ```
 
+Response:
+```json
+{
+  "status": "ok",
+  "timestamp": "2024-01-01T00:00:00.000Z"
+}
+```
+
 ## 📁 File Structure
 
 ```
-product-tree-from-jira/
+product-tree-jira-tool/
 ├── server.js              # Main server file
 ├── package.json           # Dependencies and scripts
 ├── ui/                    # Frontend interface
 │   ├── index.html
 │   ├── styles.css
-│   └── app.js
+│   ├── app.js
+│   └── fonts/            # Custom fonts
 ├── cloudflare-worker/     # Cloudflare Worker deployment
 ├── netlify/              # Netlify Functions deployment
 ├── vercel/               # Vercel API deployment
@@ -111,38 +127,31 @@ cd vercel
 vercel deploy
 ```
 
-## 📊 Supported Jira CSV Formats
+## 📊 Supported Data Structure
 
-The tool supports standard Jira CSV exports with the following fields:
-- Issue Key
-- Summary
-- Issue Type
-- Status
-- Priority
-- Components
-- Labels
-- Epic Link
-- Parent Link
+The tool generates XML following this structure:
+```xml
+<product_tree>
+  <product>
+    <goal>
+      <job>
+        <work_item>
+          <work>...</work>
+        </work_item>
+      </job>
+    </goal>
+  </product>
+</product_tree>
+```
 
 ## 🔧 Configuration Options
 
-### CSV Mapping
-Configure how Jira fields map to product tree structure:
-
-```json
-{
-  "hierarchy": {
-    "epic": "Epic Link",
-    "story": "Issue Type",
-    "task": "Issue Type"
-  },
-  "fields": {
-    "title": "Summary",
-    "status": "Status",
-    "priority": "Priority"
-  }
-}
-```
+The form allows you to configure:
+- Product title and description
+- Multiple goals and objectives
+- Jobs to be done for each goal
+- Work items for each job
+- Work breakdown for each work item
 
 ## 🐳 Docker Deployment
 
@@ -161,10 +170,10 @@ CMD ["npm", "start"]
 
 ## 🔒 Security
 
-- File upload validation
-- CSV parsing sanitization
-- Input validation
+- Input validation and sanitization
+- CORS configuration
 - Error handling
+- Health monitoring
 
 ## 📊 Monitoring
 
@@ -177,8 +186,8 @@ GET /health
 Response:
 ```json
 {
-  "status": "healthy",
-  "service": "Product Tree from Jira"
+  "status": "ok",
+  "timestamp": "2024-01-01T00:00:00.000Z"
 }
 ```
 
@@ -205,7 +214,7 @@ For support and questions:
 
 ### v1.0.0
 - Initial release
-- CSV to XML conversion
+- Form-based product tree generation
 - Web interface
 - Multiple deployment options
 - RESTful API
