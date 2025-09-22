@@ -20,7 +20,11 @@ const DEFAULT_MAPPING = {
     story_points: "Story Points",
     epic_link: "Epic Link",
     parent: "Parent",
-    team: "Team" // adjust if you have a custom field name
+    team: "Team", // adjust if you have a custom field name
+    quarter: "Quarter",
+    year: "Year",
+    start: "Start Date",
+    end: "End Date"
   },
   status_map: {
     "To Do": "not_started",
@@ -139,7 +143,11 @@ async function fetchFromJiraProxy(){
       story_points: String(r.fields?.customfield_10016 || ""),
       epic_link: (r.fields?.parent?.key && r.fields?.issuetype?.name !== "Epic") ? r.fields.parent.key : "",
       parent: r.fields?.parent?.key || "",
-      team: r.fields?.customfield_team || ""
+      team: r.fields?.customfield_team || "",
+      quarter: r.fields?.customfield_quarter || "",
+      year: r.fields?.customfield_year || "",
+      start: r.fields?.customfield_startdate || "",
+      end: r.fields?.customfield_enddate || ""
     }));
     summariseSource();
   }catch(err){ alert("Fetch failed: " + err.message); }
@@ -165,7 +173,11 @@ function normaliseRow(r, cols){
     story_points: String(get("story_points")).trim(),
     epic_link: String(get("epic_link")).trim(),
     parent: String(get("parent")).trim(),
-    team: String(get("team")).trim()
+    team: String(get("team")).trim(),
+    quarter: String(get("quarter")).trim(),
+    year: String(get("year")).trim(),
+    start: String(get("start")).trim(),
+    end: String(get("end")).trim()
   };
 }
 
@@ -230,39 +242,72 @@ function buildAttachedFormat(rows, mapping, defaults, productTitle){
 
   for(const e of epics){
     const gId = `pt-goal-${e.key||e.id||slug(e.summary)}`;
-    out.push(`    <goal id="${esc(gId)}" title="${esc(e.summary||e.key)}" type="goal"${attr("status", normStatus(e.status))}${attr("priority", e.priority)}${attr("team", e.team)}>`);
+    out.push(`    <goal id="${esc(gId)}" title="${esc(e.summary||e.key)}" type="goal"${attr("status", normStatus(e.status))}${attr("priority", e.priority)}${attr("team", e.team)}${attr("quarter", e.quarter)}${attr("year", e.year)}>`);
     out.push(`      <title>${esc(e.summary||e.key)}</title>`);
     if(e.summary) out.push(`      <summary>${esc(e.summary)}</summary>`);
     if(e.description) out.push(`      <description>${esc(e.description)}</description>`);
 
     const kids = (byEpic.get(e.key) || []);
-    for(const k of kids){
-      const role = roleOf(k.type);
-      if(role === "job"){
-        const jId = `pt-job-${k.key||k.id||slug(k.summary)}`;
-        out.push(`      <job id="${esc(jId)}" title="${esc(k.summary||k.key)}" type="job"${attr("status", normStatus(k.status))}${attr("priority", k.priority)}${attr("team", k.team)}>`);
-        out.push(`        <title>${esc(k.summary||k.key)}</title>`);
-        if(k.summary) out.push(`        <summary>${esc(k.summary)}</summary>`);
-        if(k.description) out.push(`        <description>${esc(k.description)}</description>`);
-        // Also provide job_content (duplicate of description if present)
-        if(k.description) out.push(`        <job_content>${esc(k.description)}</job_content>`);
-        out.push(`      </job>`);
-      } else if (role === "work") {
-        const wId = `pt-work-${k.key||k.id||slug(k.summary)}`;
-        out.push(`      <work id="${esc(wId)}" title="${esc(k.summary||k.key)}" type="work"${attr("status", normStatus(k.status))}${attr("priority", k.priority)}${attr("team", k.team)}>`);
-        out.push(`        <title>${esc(k.summary||k.key)}</title>`);
-        if(k.summary) out.push(`        <summary>${esc(k.summary)}</summary>`);
-        if(k.description) out.push(`        <description>${esc(k.description)}</description>`);
-        out.push(`      </work>`);
-      } else {
-        const wiId = `pt-work-${k.key||k.id||slug(k.summary)}`;
-        out.push(`      <work_item id="${esc(wiId)}" title="${esc(k.summary||k.key)}" type="work_item"${attr("status", normStatus(k.status))}${attr("priority", k.priority)}${attr("team", k.team)}>`);
-        out.push(`        <title>${esc(k.summary||k.key)}</title>`);
-        if(k.summary) out.push(`        <summary>${esc(k.summary)}</summary>`);
-        if(k.description) out.push(`        <description>${esc(k.description)}</description>`);
-        out.push(`      </work_item>`);
+    
+    // Separate jobs from work items
+    const jobs = kids.filter(k => roleOf(k.type) === "job");
+    const workItems = kids.filter(k => roleOf(k.type) === "work_item");
+    const workItemsByJob = new Map();
+    
+    // Group work items by their parent job
+    for(const wi of workItems){
+      const parentJob = wi.parent || "";
+      if(parentJob){
+        if(!workItemsByJob.has(parentJob)) workItemsByJob.set(parentJob, []);
+        workItemsByJob.get(parentJob).push(wi);
       }
     }
+    
+    // Process jobs first
+    for(const k of jobs){
+      const jId = `pt-job-${k.key||k.id||slug(k.summary)}`;
+      out.push(`      <job id="${esc(jId)}" title="${esc(k.summary||k.key)}" type="job"${attr("status", normStatus(k.status))}${attr("priority", k.priority)}${attr("team", k.team)}${attr("effort", k.story_points)}${attr("start", k.start)}${attr("end", k.end)}>`);
+      out.push(`        <title>${esc(k.summary||k.key)}</title>`);
+      if(k.summary) out.push(`        <summary>${esc(k.summary)}</summary>`);
+      if(k.description) out.push(`        <description>${esc(k.description)}</description>`);
+      if(k.description) out.push(`        <job_content>${esc(k.description)}</job_content>`);
+      
+      // Add work items nested under this job
+      const jobWorkItems = workItemsByJob.get(k.key) || [];
+      for(const wi of jobWorkItems){
+        const wiId = `pt-work-${wi.key||wi.id||slug(wi.summary)}`;
+        out.push(`        <work_item id="${esc(wiId)}" title="${esc(wi.summary||wi.key)}" type="work_item"${attr("status", normStatus(wi.status))}${attr("priority", wi.priority)}${attr("team", wi.team)}>`);
+        out.push(`          <title>${esc(wi.summary||wi.key)}</title>`);
+        if(wi.summary) out.push(`          <summary>${esc(wi.summary)}</summary>`);
+        if(wi.description) out.push(`          <description>${esc(wi.description)}</description>`);
+        out.push(`        </work_item>`);
+      }
+      
+      out.push(`      </job>`);
+    }
+    
+    // Process remaining work items (not nested under jobs)
+    const remainingWorkItems = workItems.filter(wi => !wi.parent || !jobs.some(j => j.key === wi.parent));
+    for(const k of remainingWorkItems){
+      const wiId = `pt-work-${k.key||k.id||slug(k.summary)}`;
+      out.push(`      <work_item id="${esc(wiId)}" title="${esc(k.summary||k.key)}" type="work_item"${attr("status", normStatus(k.status))}${attr("priority", k.priority)}${attr("team", k.team)}>`);
+      out.push(`        <title>${esc(k.summary||k.key)}</title>`);
+      if(k.summary) out.push(`        <summary>${esc(k.summary)}</summary>`);
+      if(k.description) out.push(`        <description>${esc(k.description)}</description>`);
+      out.push(`      </work_item>`);
+    }
+    
+    // Process work items (not jobs)
+    const workItems2 = kids.filter(k => roleOf(k.type) === "work");
+    for(const k of workItems2){
+      const wId = `pt-work-${k.key||k.id||slug(k.summary)}`;
+      out.push(`      <work id="${esc(wId)}" title="${esc(k.summary||k.key)}" type="work"${attr("status", normStatus(k.status))}${attr("priority", k.priority)}${attr("team", k.team)}>`);
+      out.push(`        <title>${esc(k.summary||k.key)}</title>`);
+      if(k.summary) out.push(`        <summary>${esc(k.summary)}</summary>`);
+      if(k.description) out.push(`        <description>${esc(k.description)}</description>`);
+      out.push(`      </work>`);
+    }
+    
     out.push(`    </goal>`);
   }
 

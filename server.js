@@ -5,7 +5,13 @@ const PORT = process.env.PORT || 3002;
 
 // Middleware
 app.use(express.json());
+
 app.use(express.static(path.join(__dirname, 'ui')));
+
+// Serve index.html for all other routes
+app.get('/*', (req, res) => {
+    res.sendFile(path.join(__dirname, 'ui', 'index.html'));
+});
 
 // API routes for serverless functions
 app.post('/api/jira-search', async (req, res) => {
